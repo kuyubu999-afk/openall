@@ -125,6 +125,9 @@ main { max-width: 1040px; margin: 0 auto; padding: 16px; }
 .spot figcaption { padding: 10px 12px 12px; }
 .spot b { display: block; font-size: 16px; margin-bottom: 2px; }
 .spot span { color: var(--muted); font-size: 14px; line-height: 1.6; display: block; }
+.map-link { display: inline-flex; margin-top: 9px; padding: 5px 11px; border: 1px solid var(--line); border-radius: 999px; font-size: 13px; font-weight: 600; }
+.map-link:active { background: var(--hl); }
+.chip[data-fav-filter][aria-pressed="true"] { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
 
 table.ph { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
 .ph th, .ph td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
