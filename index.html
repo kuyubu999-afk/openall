@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="description" content="可离线阅读、支持语音播报的全球旅游指南">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="style.css">
+  <title>环球旅行指南</title>
+</head>
+<body>
+  <header class="top">
+    <span class="brand">环球旅行指南</span>
+    <nav aria-label="主导航">
+      <a href="#/">目的地</a>
+      <a href="#/tips">出行通用</a>
+    </nav>
+    <span id="net" class="net" aria-live="polite"></span>
+  </header>
+  <main id="app" aria-live="polite"></main>
+  <div id="player" class="player" hidden>
+    <span id="now" class="now">准备朗读</span>
+    <button id="pp" class="btn small" type="button">⏸ 暂停</button>
+    <button id="st" class="btn small" type="button">■ 停止</button>
+    <label for="rate">语速</label>
+    <select id="rate">
+      <option value="0.7">慢</option>
+      <option value="0.85">较慢</option>
+      <option value="1">正常</option>
+      <option value="1.15">较快</option>
+      <option value="1.3">快</option>
+    </select>
+  </div>
+  <script src="art.js"></script>
+  <script src="data-asia.js"></script>
+  <script src="data-europe.js"></script>
+  <script src="data-world.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
