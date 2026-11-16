@@ -106,6 +106,12 @@
     if (TTS.i >= TTS.queue.length) { ttsStop(); return; }
     var g = ++TTS.gen;
     var it = TTS.queue[TTS.i];
+    if (window.AndroidTTS) {
+      mark(it.sid);
+      updatePlayer();
+      window.AndroidTTS.speak(it.text, it.lang || 'zh-CN', TTS.rate);
+      return;
+    }
     var u = new SpeechSynthesisUtterance(it.text);
     u.lang = it.lang || 'zh-CN';
     var v = pickVoice(u.lang);
@@ -123,7 +129,7 @@
   }
 
   function ttsPlay(items) {
-    if (!synth) { toast('此浏览器不支持语音播报。'); return; }
+    if (!synth && !window.AndroidTTS) { toast('此设备不支持语音播报。'); return; }
     ttsStop(true);
     var q = [];
     items.forEach(function (it) {
@@ -136,7 +142,7 @@
   }
   function ttsPause() {
     if (!TTS.playing || TTS.paused) return;
-    TTS.paused = true; TTS.gen++; synth.cancel(); updatePlayer();
+    TTS.paused = true; TTS.gen++; if (window.AndroidTTS) window.AndroidTTS.stop(); if (synth) synth.cancel(); updatePlayer();
   }
   function ttsResume() {
     if (!TTS.playing || !TTS.paused) return;
@@ -144,16 +150,23 @@
   }
   function ttsStop(silent) {
     TTS.gen++; TTS.playing = false; TTS.paused = false;
+    if (window.AndroidTTS) window.AndroidTTS.stop();
     if (synth) synth.cancel();
     clearMark();
     if (!silent) updatePlayer();
   }
 
+  window.onNativeTtsDone = function () {
+    if (!TTS.playing || TTS.paused) return;
+    TTS.i++;
+    next();
+  };
+
   function langName(l) { return LANGN[normLang(l).split('-')[0]] || l; }
   function refreshHints() {
     document.querySelectorAll('.vhint').forEach(function (el) {
       var lang = el.getAttribute('data-lang');
-      if (!synth) { el.textContent = '此浏览器不支持语音播报，仍可正常阅读。'; return; }
+      if (!synth && !window.AndroidTTS) { el.textContent = '此设备不支持语音播报，仍可正常阅读。'; return; }
       var vs = synth.getVoices();
       if (!vs.length) { el.textContent = ''; return; }
       el.textContent = pickVoice(lang) ? '' : ('未检测到' + langName(lang) + '语音包，朗读可能无声或发音不准。请在系统设置里下载对应语音后重试。');
