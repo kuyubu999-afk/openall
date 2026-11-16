@@ -178,7 +178,16 @@
   }
 
   /* ---------- 页面：首页 ---------- */
-  var state = { q: '', region: '全部' };
+  var state = { q: '', region: '全部', favoritesOnly: false };
+  function favorites() { return store.get('favorite-destinations', []); }
+  function isFavorite(id) { return favorites().indexOf(id) >= 0; }
+  function toggleFavorite(id) {
+    var saved = favorites();
+    var i = saved.indexOf(id);
+    if (i >= 0) saved.splice(i, 1); else saved.push(id);
+    store.set('favorite-destinations', saved);
+    toast(i >= 0 ? '已取消收藏' : '已加入收藏');
+  }
 
   function haystack(d) {
     return [d.name, d.country, d.region, d.tag]
@@ -198,10 +207,10 @@
   function fillGrid() {
     var q = state.q.trim().toLowerCase();
     var list = DESTS.filter(function (d) {
-      return (state.region === '全部' || d.region === state.region) && (!q || haystack(d).indexOf(q) >= 0);
+      return (!state.favoritesOnly || isFavorite(d.id)) && (state.region === '全部' || d.region === state.region) && (!q || haystack(d).indexOf(q) >= 0);
     });
     var g = document.getElementById('grid');
-    g.innerHTML = list.length ? list.map(cardHtml).join('') : '<p class="empty">没有找到相关目的地，换个关键词试试。</p>';
+    g.innerHTML = list.length ? list.map(cardHtml).join('') : '<p class="empty">' + (state.favoritesOnly ? '还没有收藏目的地。打开任意目的地，点击“☆ 收藏”即可添加。' : '没有找到相关目的地，换个关键词试试。') + '</p>'; 
   }
 
   function renderHome() {
@@ -212,6 +221,7 @@
       '<div class="controls">' +
       '<input id="q" class="search" type="search" placeholder="搜索国家、城市、景点或美食" value="' + esc(state.q) + '" aria-label="搜索">' +
       '<div class="chips" role="group" aria-label="按大洲筛选">' +
+      '<button class="chip" type="button" data-fav-filter aria-pressed="' + state.favoritesOnly + '">★ 我的收藏</button>' +
       REGIONS.map(function (r) {
         return '<button class="chip" type="button" data-region="' + r + '" aria-pressed="' + (state.region === r) + '">' + r + '</button>';
       }).join('') + '</div></div>' +
@@ -257,8 +267,11 @@
         var q = sid();
         it.push({ sid: q, text: s[0] + '。' + s[2], lang: 'zh-CN' });
         var photo = s[3] ? '<img src="' + esc(s[3]) + '" alt="' + esc(s[0]) + '" loading="lazy" onerror="this.remove()">' : '';
+        var mapQuery = encodeURIComponent(d.name + ' ' + s[0]);
+        var mapLink = 'https://www.google.com/maps/search/?api=1&query=' + mapQuery;
         return '<figure class="spot" data-sid="' + q + '"><div class="art">' + Art.scene(s[1], d.pal, i) + photo + '</div>' +
-          '<figcaption><b>' + esc(s[0]) + '</b><span>' + esc(s[2]) + '</span></figcaption></figure>';
+          '<figcaption><b>' + esc(s[0]) + '</b><span>' + esc(s[2]) + '</span>' +
+          '<a class="map-link" data-ext href="' + esc(mapLink) + '" target="_blank" rel="noopener noreferrer">地图中查看 ↗</a></figcaption></figure>';
       }).join('') + '</div>';
     });
 
@@ -315,7 +328,8 @@
       '<div class="basics">' + d.basics.map(function (b) {
         return '<div><small>' + esc(b[0]) + '</small><b>' + esc(b[1]) + '</b></div>';
       }).join('') + '</div>' +
-      '<div class="toolbar"><button class="btn primary" type="button" data-act="read-all">🔊 朗读全文</button></div>' +
+      '<div class="toolbar"><button class="btn primary" type="button" data-act="read-all">🔊 朗读全文</button>' +
+      '<button class="btn" type="button" data-act="toggle-fav">' + (isFavorite(d.id) ? '★ 已收藏' : '☆ 收藏') + '</button></div>' +
       '<div class="toc">' + blocks.map(function (b) {
         return '<button class="btn" type="button" data-act="goto" data-b="' + b.id + '">' + esc(b.title.replace(/(.*?)(\(.*)/, '$1')) + '</button>';
       }).join('') + '</div>' +
@@ -382,9 +396,11 @@
     var ext = e.target.closest('a[data-ext]');
     if (ext && !navigator.onLine) {
       e.preventDefault();
-      toast('当前处于离线状态，联网后才能打开视频链接。');
+      toast('当前处于离线状态，地图和视频服务需要联网；景点介绍仍可离线查看。');
       return;
     }
+    var favFilter = e.target.closest('[data-fav-filter]');
+    if (favFilter) { state.favoritesOnly = !state.favoritesOnly; renderHome(); return; }
     var chip = e.target.closest('[data-region]');
     if (chip) { state.region = chip.getAttribute('data-region'); renderHome(); return; }
 
@@ -392,7 +408,10 @@
     if (!t || !CUR && t.dataset.act !== 'say') return;
     var act = t.dataset.act;
 
-    if (act === 'read-all') {
+    if (act === 'toggle-fav') {
+      var current = location.hash.split('/')[2];
+      if (current) { toggleFavorite(current); renderDetail(current); }
+    } else if (act === 'read-all') {
       var items = CUR.lead.slice();
       CUR.blocks.forEach(function (b) { if (b.speakable) items = items.concat(b.items); });
       ttsPlay(items);
