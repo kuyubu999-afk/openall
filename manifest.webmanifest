@@ -1,0 +1,14 @@
+{
+  "name": "环球旅行指南(离线版)",
+  "short_name": "旅行指南",
+  "description": "可离线阅读、图文为主、支持语音播报的全球旅游指南",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f6f7f4",
+  "theme_color": "#0f766e",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
